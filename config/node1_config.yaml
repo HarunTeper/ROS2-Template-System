@@ -1,0 +1,19 @@
+# Node 1: Timer that publishes to a topic
+name: "node1"
+timers:
+  - period: 1.0  # 1 second
+    callback: "timer_callback_1"
+subscriptions: []
+publishers:
+  - topic: "/topic1"
+variables:
+  - type: "std_msgs::Header"
+    name: "var1"
+callbacks:
+  timer_callback_1:
+    execution_time: 0.1  # 100ms execution time
+    publishers_to_publish:
+      - "/topic1"
+    variables_to_write:
+      - "var1"
+    variables_to_read: []

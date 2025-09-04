@@ -1,0 +1,18 @@
+# Node 3: Subscription that subscribes to topic2
+name: "node3"
+timers: []
+subscriptions:
+  - topic: "/topic2"
+    buffer_size: 10
+    callback: "subscription_callback_3"
+publishers: []
+variables:
+  - type: "std_msgs::Header"
+    name: "var3"
+callbacks:
+  subscription_callback_3:
+    execution_time: 0.2  # 200ms execution time
+    publishers_to_publish: []
+    variables_to_write:
+      - "var3"
+    variables_to_read: []

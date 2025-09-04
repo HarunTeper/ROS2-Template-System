@@ -1,0 +1,32 @@
+# Node 2: Subscription that subscribes to topic1, Timer that publishes to topic2
+name: "node2"
+timers:
+  - period: 2.0  # 2 seconds
+    callback: "timer_callback_2"
+subscriptions:
+  - topic: "/topic1"
+    buffer_size: 10
+    callback: "subscription_callback_2"
+publishers:
+  - topic: "/topic2"
+variables:
+  - type: "std_msgs::Header"
+    name: "var2_a"
+  - type: "std_msgs::Header"
+    name: "var2_b"
+callbacks:
+  subscription_callback_2:
+    execution_time: 0.05  # 50ms execution time
+    publishers_to_publish: []
+    variables_to_write:
+      - "var2_a"
+    variables_to_read:
+      - "var2_b"
+  timer_callback_2:
+    execution_time: 0.15  # 150ms execution time
+    publishers_to_publish:
+      - "/topic2"
+    variables_to_write:
+      - "var2_b"
+    variables_to_read:
+      - "var2_a"

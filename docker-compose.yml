@@ -1,0 +1,239 @@
+---
+#------------------------------------------------------------------------------
+# UNIFIED DOCKER COMPOSE
+#------------------------------------------------------------------------------
+
+x-common-base: &common-base
+  privileged: true
+  network_mode: host
+  env_file:
+    - .env
+  stdin_open: true
+  tty: true
+  pull_policy: build
+  ipc: host
+  pid: "host"
+
+x-build-auna: &build-auna
+  context: .
+  dockerfile: dockerfiles/auna.dockerfile
+  args:
+    - ROS_DISTRO=${ROS_DISTRO}
+    - PIP_BREAK_SYSTEM_PACKAGES=${PIP_BREAK_SYSTEM_PACKAGES}
+    - HOST_UID=${HOST_UID}
+    - HOST_GID=${HOST_GID}
+    - ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
+    - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}
+  target: runtime
+
+x-package-base: &package-base
+  <<: *common-base
+  build:
+    <<: *build-auna
+  volumes:
+    - ./packages/src:/home/ubuntu/workspace/packages/src:cached
+    - ./config:/home/ubuntu/workspace/config:ro
+    - /var/run/lttng:/var/run/lttng:rw
+
+x-physical-base: &physical-base
+  <<: *common-base
+  build:
+    <<: *build-auna
+  volumes:
+    # Packages
+    - ./packages/src:/home/ubuntu/workspace/packages/src:cached
+    # Config
+    - ./config:/home/ubuntu/workspace/config:ro
+    # IO
+    - /dev:/dev
+    # Tracing
+    - /var/run/lttng:/var/run/lttng:rw
+
+x-gui-base: &gui-base
+  <<: *common-base
+  build:
+    <<: *build-auna
+  volumes:
+    # Packages
+    - ./packages/src:/home/ubuntu/workspace/packages/src:cached
+    # Config
+    - ./config:/home/ubuntu/workspace/config:ro
+    # GUI
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    - ${XDG_RUNTIME_DIR}:/tmp/runtime-ubuntu:rw
+    # Tracing
+    - /var/run/lttng:/var/run/lttng:rw
+  environment:
+    - DISPLAY=${DISPLAY}
+    - XDG_RUNTIME_DIR=/tmp/runtime-ubuntu
+    - QT_X11_NO_MITSHM=1
+
+x-dev-base: &dev-base
+  <<: *common-base
+  build:
+    <<: *build-auna
+    target: development
+  user: "ubuntu"
+  volumes:
+    # Workspace
+    - .:/home/ubuntu/workspace:cached
+    # IO
+    - /dev:/dev
+    # GUI
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    - ${XDG_RUNTIME_DIR}:/tmp/runtime-ubuntu:rw
+    # Tracing
+    - /var/run/lttng:/var/run/lttng:rw
+  environment:
+    - DISPLAY=${DISPLAY}
+    - XDG_RUNTIME_DIR=/tmp/runtime-ubuntu
+    - QT_X11_NO_MITSHM=1
+
+services:
+  #==============================================================================
+  # DEVELOPMENT SERVICES
+  #==============================================================================
+  development:
+    <<: *dev-base
+    image: development:latest
+    container_name: development
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "cd packages && colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cd .. && /bin/bash",
+      ]
+    profiles: ["zenohd", "development"]
+
+  #==============================================================================
+  # CORE NETWORK SERVICES
+  #==============================================================================
+  zenohd:
+    build:
+      <<: *build-auna
+    privileged: true
+    network_mode: host
+    env_file:
+      - .env
+    stdin_open: true
+    tty: true
+    pull_policy: build
+    ipc: host
+    image: zenohd:latest
+    container_name: zenohd
+    command: ["ros2", "run", "rmw_zenoh_cpp", "rmw_zenohd"]
+    profiles: ["zenohd", "sim_scenario", "sim_scenario_1", "development"]
+
+  #==============================================================================
+  # DEMO SERVICES
+  #==============================================================================
+  talker:
+    <<: *package-base
+    build:
+      <<: *build-auna
+      args:
+        - INSTALL_PACKAGE_NAMES=${DEMO_PACKAGES}
+    image: talker:latest
+    container_name: talker
+    command: ["ros2", "run", "demo_nodes_cpp", "talker"]
+    profiles: ["talker"]
+
+  listener:
+    <<: *package-base
+    build:
+      <<: *build-auna
+      args:
+        - INSTALL_PACKAGE_NAMES=${DEMO_PACKAGES}
+    image: listener:latest
+    container_name: listener
+    command: ["ros2", "run", "demo_nodes_cpp", "listener"]
+    profiles: ["listener"]
+
+  #==============================================================================
+  # TEMPLATE SYSTEM SERVICES
+  #==============================================================================
+  template_system:
+    <<: *package-base
+    build:
+      <<: *build-auna
+      args:
+        - PACKAGE_NAMES=template_system
+    image: template_system:latest
+    container_name: template_system
+    command:
+      [
+        "ros2",
+        "launch",
+        "template_system",
+        "multi_node_system.launch.py",
+        "system_config_file:=${SYSTEM_CONFIG_FILE}",
+        "namespace:=${TEMPLATE_NAMESPACE}",
+        "config_dir:=/home/ubuntu/workspace/config",
+      ]
+    profiles: ["template_system"]
+
+  #==============================================================================
+  # RQT SERVICES
+  #==============================================================================
+  rqt_base:
+    <<: *gui-base
+    build:
+      <<: *build-auna
+      args:
+        - INSTALL_PACKAGE_NAMES=${RQT_PACKAGES}
+    image: rqt:latest
+    container_name: rqt
+    command: ["rqt"]
+    profiles: ["rqt"]
+
+  rqt_reconfigure:
+    extends: rqt_base
+    container_name: rqt_reconfigure
+    profiles: ["rqt_reconfigure"]
+    command: ["ros2", "run", "rqt_reconfigure", "rqt_reconfigure"]
+
+  rqt_graph:
+    extends: rqt_base
+    container_name: rqt_graph
+    command: ["ros2", "run", "rqt_graph", "rqt_graph"]
+    profiles: ["rqt_graph"]
+
+  #==============================================================================
+  # TRACING SERVICES
+  #==============================================================================
+  tracing:
+    <<: *package-base
+    image: tracing:latest
+    container_name: tracing
+    user: root
+    volumes:
+      - /var/run/lttng:/var/run/lttng:rw
+      - ./traces:/home/ubuntu/workspace/traces:rw
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "source /home/ubuntu/tracing/install/setup.bash && ROS_TRACE_DIR=${ROS_TRACE_DIR} ros2 trace && chown -R 1000:1000 /home/ubuntu/workspace/traces",
+      ]
+    profiles: ["tracing"]
+
+  analysis:
+    <<: *package-base
+    volumes:
+      - .:/home/ubuntu/workspace
+    image: tracing:latest
+    container_name: analysis
+    command: ["/bin/bash", "-c", "/bin/bash"]
+    profiles: ["tracing"]
+
+  test_tracing:
+    <<: *package-base
+    image: test_tracing:latest
+    container_name: test_tracing
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "while true; do ros2 topic pub /test_topic std_msgs/String 'data: hello'; sleep 0.01; done",
+      ]
+    profiles: ["test_tracing"]

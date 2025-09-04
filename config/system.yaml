@@ -1,0 +1,28 @@
+system:
+  name: "template_system"
+  description: "Multi-node template system with component-based architecture"
+
+executors:
+  - name: "executor_1"
+    type: "single-threaded"
+    nodes:
+      - "node1"
+  - name: "executor_2" 
+    type: "single-threaded"
+    nodes:
+      - "node2"
+  - name: "executor_3"
+    type: "single-threaded"
+    nodes:
+      - "node3"
+
+nodes:
+  - name: "node1"
+    config_file: "node1_config.yaml"
+    namespace: ""
+  - name: "node2"
+    config_file: "node2_config.yaml"
+    namespace: ""
+  - name: "node3"
+    config_file: "node3_config.yaml"
+    namespace: ""
