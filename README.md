@@ -42,6 +42,89 @@ That's it! The system will:
 3. Create multiple executors with nodes as defined in the configuration
 4. Run until you press Ctrl+C
 
+## Tracing
+
+The system includes support for ROS 2 tracing to monitor and analyze system behavior. The tracing functionality allows you to capture detailed execution traces of your template system.
+
+### How to Use Tracing
+
+To use the tracing functionality, you need to start services in a specific order:
+
+#### 1. Start the Tracing Service (Interactive)
+
+First, start the tracing container in interactive mode:
+
+```bash
+# Start tracing service (requires interactive shell)
+docker compose run tracing
+```
+
+This will start the tracing daemon and wait for you to press Enter to begin tracing.
+
+#### 2. Begin Tracing
+
+Go back to the terminal running the tracing container and **press Enter** to start tracing. The system will now capture execution traces of all running ROS 2 nodes.
+
+#### 3. Start the Zenoh Service
+
+In a new terminal, start the Zenoh communication service:
+
+```bash
+# Start zenoh service
+docker compose up zenohd
+```
+
+#### 4. Start Your Template System Services
+
+Now start the actual services that run your template system:
+
+```bash
+# Start the template system
+docker compose up template_system
+
+# Or start other services like demo nodes
+docker compose up talker listener
+```
+
+#### 5. Stop Tracing
+
+When you're done collecting traces, go back to the tracing terminal and **press Enter again** to stop tracing. The traces will be automatically saved to the `traces/` directory.
+
+### Tracing Output
+
+Traces are saved in the `traces/` directory with timestamps:
+- `traces/session-YYYYMMDDHHMMSS/ust/uid/` - Contains the actual trace data
+- Use analysis tools like `babeltrace2` or ROS 2 tracing analysis tools to examine the traces
+
+### Available Tracing Services
+
+| Service | Purpose | Usage |
+|---------|---------|--------|
+| `tracing` | Main tracing service | `docker compose run tracing` (interactive) |
+| `analysis` | Analysis environment | `docker compose run analysis` |
+| `test_tracing` | Test publisher for tracing | `docker compose up test_tracing` |
+
+### Example Tracing Workflow
+
+```bash
+# Terminal 1: Start tracing (interactive)
+docker compose run tracing
+# Wait for prompt, then press Enter when ready to start tracing
+
+# Terminal 1: Press Enter to begin tracing
+
+# Terminal 2: Start zenoh
+docker compose up zenohd
+
+# Terminal 3: Start your system
+docker compose up template_system
+
+# ... let system run ...
+# Terminal 1: Press Enter again to stop tracing
+
+# Traces are now saved in traces/ directory
+```
+
 ## Configuration
 
 The template system uses two types of configuration files:
