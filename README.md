@@ -266,13 +266,13 @@ colcon build --packages-select template_system --symlink-install
 ros2 launch template_system multi_node_system.launch.py
 ```
 
-### Validating Configuration
+<!-- ### Validating Configuration
 
 Use the included validation script:
 
 ```bash
 python3 validate_configs.py
-```
+``` -->
 
 ## Configuration Reference
 
