@@ -98,7 +98,7 @@ services:
     image: development:latest
     container_name: development
     command: ["/bin/bash"]
-    profiles: ["zenohd", "development"]
+    profiles: ["dev"]
 
   #==============================================================================
   # CORE NETWORK SERVICES
@@ -117,7 +117,7 @@ services:
     image: zenohd:latest
     container_name: zenohd
     command: ["ros2", "run", "rmw_zenoh_cpp", "rmw_zenohd"]
-    profiles: ["zenohd", "sim_scenario", "sim_scenario_1", "development"]
+    profiles: ["core", "dev", "demo", "app", "tools"]
 
   #==============================================================================
   # DEMO SERVICES
@@ -131,7 +131,7 @@ services:
     image: talker:latest
     container_name: talker
     command: ["ros2", "run", "demo_nodes_cpp", "talker"]
-    profiles: ["talker"]
+    profiles: ["demo"]
 
   listener:
     <<: *package-base
@@ -142,7 +142,7 @@ services:
     image: listener:latest
     container_name: listener
     command: ["ros2", "run", "demo_nodes_cpp", "listener"]
-    profiles: ["listener"]
+    profiles: ["demo"]
 
   #==============================================================================
   # TEMPLATE SYSTEM SERVICES
@@ -165,7 +165,7 @@ services:
         "namespace:=${TEMPLATE_NAMESPACE}",
         "config_dir:=/home/ubuntu/workspace/config",
       ]
-    profiles: ["template_system"]
+    profiles: ["app"]
 
   #==============================================================================
   # RQT SERVICES
@@ -179,19 +179,19 @@ services:
     image: rqt:latest
     container_name: rqt
     command: ["rqt"]
-    profiles: ["rqt"]
+    profiles: ["tools"]
 
   rqt_reconfigure:
     extends: rqt_base
     container_name: rqt_reconfigure
-    profiles: ["rqt_reconfigure"]
+    profiles: ["tools"]
     command: ["ros2", "run", "rqt_reconfigure", "rqt_reconfigure"]
 
   rqt_graph:
     extends: rqt_base
     container_name: rqt_graph
     command: ["ros2", "run", "rqt_graph", "rqt_graph"]
-    profiles: ["rqt_graph"]
+    profiles: ["tools"]
 
   #==============================================================================
   # TRACING SERVICES
@@ -210,7 +210,7 @@ services:
         "-c",
         "source /home/ubuntu/tracing/install/setup.bash && ROS_TRACE_DIR=${ROS_TRACE_DIR} ros2 trace && chown -R 1000:1000 /home/ubuntu/workspace/traces",
       ]
-    profiles: ["tracing"]
+    profiles: ["tools"]
 
   analysis:
     <<: *package-base
@@ -218,8 +218,8 @@ services:
       - .:/home/ubuntu/workspace
     image: tracing:latest
     container_name: analysis
-    command: ["/bin/bash", "-c", "/bin/bash"]
-    profiles: ["tracing"]
+    command: ["/bin/bash"]
+    profiles: ["tools"]
 
   test_tracing:
     <<: *package-base
@@ -231,4 +231,4 @@ services:
         "-c",
         "while true; do ros2 topic pub /test_topic std_msgs/String 'data: hello'; sleep 0.01; done",
       ]
-    profiles: ["test_tracing"]
+    profiles: ["tools"]

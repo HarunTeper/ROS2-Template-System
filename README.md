@@ -32,7 +32,7 @@ ROS_DOMAIN_ID=0                          # ROS domain ID
 
 ```bash
 # Run the template system
-docker compose run template_system
+docker compose --profile app up
 ```
 
 That's it! The system will:

@@ -76,7 +76,7 @@ RUN mkdir -p /home/ubuntu/tracing/src \
 
 # Enhanced bash configuration
 RUN echo 'PS1="\[\033[32m\]\u\[\033[0m\] ➜ \[\033[34m\]\w\[\033[31m\]\$(__git_ps1 \" (%s)\)\[\033[0m\] $ "' >> ~/.bashrc \
-    && echo "source /opt/ros/	extvariable{ROS_DISTRO}/setup.bash" >> ~/.bashrc \
+    && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo 'source /home/ubuntu/tracing/install/setup.bash' >> ~/.bashrc \
     && echo 'export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}' >> ~/.bashrc
 
@@ -206,7 +206,7 @@ RUN sudo chown -R ubuntu:ubuntu /home/ubuntu/workspace \
     && if [ -n "${PACKAGE_NAMES}" ] && [ "$(find /home/ubuntu/workspace/packages/src -name "package.xml" -type f 2>/dev/null | wc -l)" -gt 0 ]; then \
     echo "Building packages..."; \
     cd /home/ubuntu/workspace/packages && \
-    bash -c "source /opt/ros/	extvariable{ROS_DISTRO}/setup.bash && \
+    bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /home/ubuntu/tracing/install/setup.bash 2>/dev/null || true && \
     colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release"; \
     else \
