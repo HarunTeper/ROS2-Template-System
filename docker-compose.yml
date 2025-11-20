@@ -14,9 +14,9 @@ x-common-base: &common-base
   ipc: host
   pid: "host"
 
-x-build-auna: &build-auna
+x-build-template_system: &build-template_system
   context: .
-  dockerfile: dockerfiles/auna.dockerfile
+  dockerfile: dockerfiles/template_system.dockerfile
   args:
     - ROS_DISTRO=${ROS_DISTRO}
     - PIP_BREAK_SYSTEM_PACKAGES=${PIP_BREAK_SYSTEM_PACKAGES}
@@ -29,7 +29,7 @@ x-build-auna: &build-auna
 x-package-base: &package-base
   <<: *common-base
   build:
-    <<: *build-auna
+    <<: *build-template_system
   volumes:
     - ./packages/src:/home/ubuntu/workspace/packages/src:cached
     - ./config:/home/ubuntu/workspace/config:ro
@@ -38,7 +38,7 @@ x-package-base: &package-base
 x-physical-base: &physical-base
   <<: *common-base
   build:
-    <<: *build-auna
+    <<: *build-template_system
   volumes:
     # Packages
     - ./packages/src:/home/ubuntu/workspace/packages/src:cached
@@ -52,7 +52,7 @@ x-physical-base: &physical-base
 x-gui-base: &gui-base
   <<: *common-base
   build:
-    <<: *build-auna
+    <<: *build-template_system
   volumes:
     # Packages
     - ./packages/src:/home/ubuntu/workspace/packages/src:cached
@@ -71,7 +71,7 @@ x-gui-base: &gui-base
 x-dev-base: &dev-base
   <<: *common-base
   build:
-    <<: *build-auna
+    <<: *build-template_system
     target: development
   user: "ubuntu"
   volumes:
@@ -105,7 +105,7 @@ services:
   #==============================================================================
   zenohd:
     build:
-      <<: *build-auna
+      <<: *build-template_system
     privileged: true
     network_mode: host
     env_file:
@@ -125,7 +125,7 @@ services:
   talker:
     <<: *package-base
     build:
-      <<: *build-auna
+      <<: *build-template_system
       args:
         - INSTALL_PACKAGE_NAMES=${DEMO_PACKAGES}
     image: talker:latest
@@ -136,7 +136,7 @@ services:
   listener:
     <<: *package-base
     build:
-      <<: *build-auna
+      <<: *build-template_system
       args:
         - INSTALL_PACKAGE_NAMES=${DEMO_PACKAGES}
     image: listener:latest
@@ -150,7 +150,7 @@ services:
   template_system:
     <<: *package-base
     build:
-      <<: *build-auna
+      <<: *build-template_system
       args:
         - PACKAGE_NAMES=template_system
     image: template_system:latest
@@ -173,7 +173,7 @@ services:
   rqt_base:
     <<: *gui-base
     build:
-      <<: *build-auna
+      <<: *build-template_system
       args:
         - INSTALL_PACKAGE_NAMES=${RQT_PACKAGES}
     image: rqt:latest

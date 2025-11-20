@@ -75,8 +75,8 @@ RUN mkdir -p /home/ubuntu/tracing/src \
     && bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && colcon build"
 
 # Enhanced bash configuration
-RUN echo 'PS1="\\[\\033[32m\\]\\u\\[\\033[0m\\] ➜ \\[\\033[34m\\]\\w\\[\\033[31m\\]\\$(__git_ps1 \\" (%s)\\")\\[\\033[0m\\] $ "' >> ~/.bashrc \
-    && echo "source /opt/ros/\${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
+RUN echo 'PS1="\[\033[32m\]\u\[\033[0m\] ➜ \[\033[34m\]\w\[\033[31m\]\$(__git_ps1 \" (%s)\)\[\033[0m\] $ "' >> ~/.bashrc \
+    && echo "source /opt/ros/	extvariable{ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo 'source /home/ubuntu/tracing/install/setup.bash' >> ~/.bashrc \
     && echo 'export RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}' >> ~/.bashrc
 
@@ -107,23 +107,56 @@ RUN sudo apt-get update && rosdep update
 # Install ROS dependencies
 RUN if [ -d "/tmp/packages" ]; then \
     echo "Installing ROS dependencies..."; \
-    rosdep install --from-paths /tmp/packages --ignore-src -r -y \
+    if [ -n "${PACKAGE_NAMES}" ]; then \
+    PKG_DIRS=""; \
+    for pkg in ${PACKAGE_NAMES}; do \
+    found_dirs=$(find /tmp/packages/src -type d -name "$pkg" -print); \
+    PKG_DIRS="$PKG_DIRS $found_dirs"; \
+    done; \
+    if [ -n "$PKG_DIRS" ]; then \
+    echo "Installing dependencies for packages in paths: $PKG_DIRS"; \
+    echo $PKG_DIRS | xargs rosdep install --from-paths --ignore-src -r -y \
     || echo "Warning: Some rosdep installations failed"; \
+    else \
+    echo "No packages found to install dependencies for."; \
+    fi; \
+    else \
+    echo "PACKAGE_NAMES is not set. Skipping ROS dependency installation."; \
+    fi; \
     fi
 
 # Install Python dependencies
 RUN if [ -d "/tmp/packages" ]; then \
     echo "Installing Python requirements..."; \
-    find /tmp/packages -name "requirements.txt" -exec pip install --no-cache-dir -r {} \; \
-    || echo "Warning: Some pip installations failed"; \
+    if [ -n "${PACKAGE_NAMES}" ]; then \
+    for pkg in ${PACKAGE_NAMES}; do \
+    found_dirs=$(find /tmp/packages/src -type d -name "$pkg" -print); \
+    for dir in $found_dirs; do \
+    find "$dir" -name "requirements.txt" -print0 | while IFS= read -r -d '' req_file; do \
+    pip install --no-cache-dir -r "$req_file" || echo "Warning: pip install failed for $req_file"; \
+    done; \
+    done; \
+    done; \
+    else \
+    echo "PACKAGE_NAMES is not set. Skipping Python dependency installation."; \
+    fi; \
     fi
 
 # Install Python packages (editable installs)
 RUN if [ -d "/tmp/packages" ]; then \
     echo "Installing Python packages..."; \
-    find /tmp/packages -name "pyproject.toml" -exec dirname {} \; | while read dir; do \
-    pip install --no-cache-dir -e "$dir" || echo "Warning: pip install failed for $dir"; \
+    if [ -n "${PACKAGE_NAMES}" ]; then \
+    for pkg in ${PACKAGE_NAMES}; do \
+    found_dirs=$(find /tmp/packages/src -type d -name "$pkg" -print); \
+    for dir in $found_dirs; do \
+    find "$dir" -name "pyproject.toml" -print0 | while IFS= read -r -d '' proj_file; do \
+    pip install --no-cache-dir -e "$(dirname "$proj_file")" || echo "Warning: pip install failed for $(dirname "$proj_file")"; \
     done; \
+    done; \
+    done; \
+    else \
+    echo "PACKAGE_NAMES is not set. Skipping Python package installation."; \
+    fi; \
     fi
 
 # Install additional system packages if specified
@@ -173,7 +206,7 @@ RUN sudo chown -R ubuntu:ubuntu /home/ubuntu/workspace \
     && if [ -n "${PACKAGE_NAMES}" ] && [ "$(find /home/ubuntu/workspace/packages/src -name "package.xml" -type f 2>/dev/null | wc -l)" -gt 0 ]; then \
     echo "Building packages..."; \
     cd /home/ubuntu/workspace/packages && \
-    bash -c "source /opt/ros/\${ROS_DISTRO}/setup.bash && \
+    bash -c "source /opt/ros/	extvariable{ROS_DISTRO}/setup.bash && \
     source /home/ubuntu/tracing/install/setup.bash 2>/dev/null || true && \
     colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release"; \
     else \
