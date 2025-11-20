@@ -1,292 +1,47 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
-        // ------------------- BUILD -------------------
         {
-            "label": "ROS2Build-All",
+            "label": "Build All Packages",
             "type": "shell",
             "command": "cd packages && colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "detail": "Build all ROS 2 packages in the workspace."
         },
         {
-            "label": "ROS2Build-Gazebo",
+            "label": "Build Single Package",
             "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_gazebo auna_common auna_msgs auna_its_msgs auna_comm --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "ROS2Build-Teleoperation",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_teleoperation --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Nav2",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_nav2 --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Scenarios",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_scenarios --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Wallfollowing",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select fp_wallfollowing --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-F110",
-            "type": "shell",
-            "command": "git submodule update --init && cd packages && colcon build --packages-select auna_msgs auna_f110 auna_common vesc vesc_ackermann vesc_msgs vesc_driver --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Comm",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_comm --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Cacc",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_cacc --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-Control",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_control auna_msgs --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "label": "ROS2Build-EKF",
-            "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_ekf --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "command": "cd packages && colcon build --packages-select ${input:packageName} --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "Builds the auna_ekf package."
+            "detail": "Build a specific ROS 2 package."
         },
         {
-            "label": "ROS2Build-ScenarioPlatooningArena",
+            "label": "Run Template System",
             "type": "shell",
-            "command": "cd packages && colcon build --packages-select auna_msgs auna_common auna_its_msgs auna_comm auna_ekf auna_scenarios auna_teleoperation auna_cacc auna_control auna_rviz_plugins auna_gazebo auna_nav2 --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        // ------------------- LAUNCH -------------------
-        {
-            "label": "LaunchGazebo",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_gazebo gazebo_world.launch.py world_name:=${input:gazeboWorld}",
+            "command": "source packages/install/setup.bash && ros2 launch template_system multi_node_system.launch.py",
             "problemMatcher": []
         },
         {
-            "label": "LaunchMultiRobotSpawn",
+            "label": "Run RQT Graph",
             "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_gazebo spawn_multi_robot.launch.py robot_number:=${input:robotCount} namespace:=${input:robotNamespace}",
+            "command": "source packages/install/setup.bash && ros2 run rqt_graph rqt_graph",
             "problemMatcher": []
-        },
-        {
-            "label": "LaunchGroundTruthLocalization",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_gazebo ground_truth_localization.launch.py namespace:=${input:robotNamespace}",
-            "problemMatcher": [],
-        },
-        {
-            "label": "LaunchNavigation",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_nav2 navigation_multi_robot.launch.py namespace:=${input:robotNamespace} robot_number:=${input:robotCount} enable_slam:=false enable_localization:=true enable_navigation:=true enable_rviz:=true enable_map_server:=true",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchF110Platform",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_f110 f110_platform.launch.py",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchF110Joy",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_f110 joy.launch.py use_ps4:=true",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchF110RViz",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_f110 rviz.launch.py",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchTeleop",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 run auna_teleoperation keyboard_teleop_hold --ros-args --params-file src/auna_teleoperation/config/key_teleop.yaml -p twist_stamped_enabled:=true",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchCamCommunication",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_comm multi_cam_communication.launch.py robot_number:=${input:robotCount} namespace:=${input:robotNamespace}",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchCamCommunicationWithLogging",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_comm multi_cam_communication.launch.py robot_number:=${input:robotCount} namespace:=${input:robotNamespace} enable_cam_logging:=true",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchCacc",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_cacc cacc_controller.launch.py robot_number:=${input:robotCount} namespace:=${input:robotNamespace}",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchMultiCacc",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_cacc multi_cacc_controller.launch.py robot_number:=2 namespace:=robot",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchRViz",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_scenarios rviz.launch.py namespace:=${input:robotNamespace} robot_number:=${input:robotCount}",
-            "problemMatcher": []
-        },
-        {
-            "label": "ToggleCaccController",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 service call /cacc/set_cacc_enable auna_msgs/srv/SetBool \"{value: ${input:caccEnable}}\"",
-            "problemMatcher": []
-        },
-        {
-            "label": "ToggleCaccAutoMode",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 service call /${input:caccNamespace}/cacc/set_auto_mode auna_msgs/srv/SetBool \"{value: ${input:autoModeEnable}}\"",
-            "problemMatcher": []
-        },
-        {
-            "label": "LaunchControl",
-            "type": "shell",
-            "command": "cd packages && source install/setup.bash && ros2 launch auna_control cmd_vel_multiplexer.launch.py namespace:=${input:robotNamespace}${input:robotIndex}",
-            "problemMatcher": [],
-            "dependsOn": [
-                "ROS2Build-Control"
-            ]
-        },
+        }
     ],
     "inputs": [
         {
-            "id": "robotNamespace",
+            "id": "packageName",
             "type": "promptString",
-            "description": "Enter the robot namespace. This value will be used as the base to enumerate the actual namespaces of the robots spawned, starting from 0 (eg. 'robot' will spawn robots with namespaces 'robot0', 'robot1', ...)",
-            "default": "robot"
-        },
-        {
-            "id": "robotCount",
-            "type": "promptString",
-            "description": "Enter the number of robots to spawn",
-            "default": "1"
-        },
-        // New inputs for CACC toggle
-        {
-            "id": "robotIndex",
-            "type": "promptString",
-            "description": "Enter the robot index (e.g., 0, 1, 2, etc.)",
-            "default": "0"
-        },
-        {
-            "id": "caccEnable",
-            "type": "pickString",
-            "description": "Enable or disable CACC controller",
-            "options": [
-                "true",
-                "false"
-            ],
-            "default": "true"
-        },
-        {
-            "id": "autoModeEnable",
-            "type": "pickString",
-            "description": "Enable or disable CACC auto mode",
-            "options": [
-                "true",
-                "false"
-            ],
-            "default": "true"
-        },
-        {
-            "id": "filterIndex",
-            "type": "promptString",
-            "description": "Enter the index of the robot to filter CAM messages from (e.g., for follower robot1 to listen to leader robot0, enter 0)",
-            "default": "0"
-        },
-        {
-            "id": "gazeboWorld",
-            "type": "pickString",
-            "description": "Select the Gazebo world to load",
-            "options": [
-                "racetrack_decorated",
-                "arena"
-            ],
-            "default": "racetrack"
-        },
-        {
-            "id": "caccNamespace",
-            "type": "promptString",
-            "description": "Enter the namespace for the CACC controller",
-            "default": "robot"
+            "description": "Enter the name of the package to build.",
+            "default": "template_system"
         }
     ]
 }

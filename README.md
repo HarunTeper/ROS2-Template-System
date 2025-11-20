@@ -206,6 +206,14 @@ TEMPLATE_NAMESPACE=my_robots  # Changes namespace from template_ns to my_robots
 
 ## Package Structure
 
+The repository is structured as a ROS 2 workspace:
+- `packages/src/template_system`: The main ROS 2 package containing the generic node and launch files.
+- `config/`: Contains YAML configuration files for the system and nodes.
+- `dockerfiles/`: Dockerfile for building the application image.
+- `docker-compose.yml`: Defines all the services for development, deployment, and tooling.
+- `.vscode/`: Contains VS Code specific settings like recommended extensions and tasks.
+- `traces/`: Default output directory for ROS 2 tracing data.
+
 ## Template System Architecture
 
 The `template_system` package (located in `packages/src/template_system/`) provides:
@@ -352,4 +360,4 @@ docker exec -it template_system cat /home/ubuntu/workspace/packages/install/temp
 
 ## License
 
-[Specify your license here]
+Apache License 2.0

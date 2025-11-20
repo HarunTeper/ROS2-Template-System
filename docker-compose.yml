@@ -97,12 +97,7 @@ services:
     <<: *dev-base
     image: development:latest
     container_name: development
-    command:
-      [
-        "/bin/bash",
-        "-c",
-        "cd packages && colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cd .. && /bin/bash",
-      ]
+    command: ["/bin/bash"]
     profiles: ["zenohd", "development"]
 
   #==============================================================================
